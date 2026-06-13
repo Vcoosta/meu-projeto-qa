@@ -1,43 +1,43 @@
-🚀 Como Executar o Projeto
-Pré-requisitos
-Ter o Node.js instalado em sua máquina.
+# 🛍️ Automação de E-commerce: Mapeamento de Fluxos Críticos
 
-1. Clonar o repositório
-Bash
-git clone [https://github.com/seu-usuario/seu-repositorio.git](https://github.com/seu-usuario/seu-repositorio.git)
-cd seu-repositorio
-2. Instalar as dependências do projeto
-Bash
-npm install
-3. Abrir a interface visual do Cypress (Modo Interativo)
-O projeto conta com um atalho otimizado no package.json. Basta rodar:
+Este projeto é uma suíte de testes automatizados de ponta a ponta (End-to-End) desenvolvida para a loja virtual [Sauce Demo](https://sauce-demo.myshopify.com/). 
 
-Bash
-npm run cy:open
-Ou, caso prefira rodar diretamente no VS Code, clique no botão de Play na aba NPM Scripts para o comando cy:open.
+## 🎯 O Objetivo do Projeto
+A ideia central deste repositório não é apenas testar botões, mas sim **estruturar a validação do sistema através de cenários de fluxos independentes e reais**. O objetivo é garantir que as jornadas mais críticas para o negócio (aquelas que impactam diretamente o cliente e a receita) funcionem de forma íngrafa e resiliente.
 
-4. Executar os testes em modo Headless (Modo Console)
-Para rodar todos os testes em segundo plano (ideal para esteiras de CI/CD):
+Ao dividir a automação em fluxos lógicos, o projeto ganha manutenção facilitada, isolamento de falhas e clareza sobre qual área do negócio está sendo impactada caso um teste falhe.
 
-Bash
-npx cypress run
-💡 Este projeto foi desenvolvido com foco em performance, boas práticas de escrita de cenários e automação limpa para portfólio profissional de QA Engenharia.
-"""
+---
 
-with open("README.md", "w", encoding="utf-8") as f:
-f.write(markdown_content)
-print("README.md criado com sucesso.")
+## 🗺️ Estrutura dos Cenários (Fluxos de Negócio)
 
-Your Markdown file is ready
-[file-tag: code-generated-file-0-1781388195343594329]
+A arquitetura dos testes foi desenhada para espelhar o comportamento real de um consumidor, dividida nos seguintes fluxos principais:
 
-Acabei de criar e disponibilizar o arquivo `README.md` (no formato oficial do GitHub) para você baixar ali em cima. 
+### 1. Fluxo de Autenticação (Acesso)
+* **Cenário:** Validação da porta de entrada do usuário.
+* **Foco:** Garantir que credenciais válidas permitam o acesso seguro ao catálogo e que tentativas inválidas retornem os bloqueios e mensagens de erro corretas, protegendo o sistema.
 
-Como o seu foco é se posicionar como um QA Pleno/Sênior no mercado, eu estruturei esse documento com elementos que chamam muita atenção de recrutadores e líderes de tecnologia (Tech Leads):
+### 2. Fluxo de Navegação (Menu e Catálogo)
+* **Cenário:** Interação com a vitrine da loja.
+* **Foco:** Testar a integridade da interface. Garante que os menus funcionam, que os filtros de produtos respondem corretamente e que o usuário consegue encontrar o que procura sem gargalos visuais.
 
-1.  **Formatação Profissional**: Uso de ícones, divisões claras e estrutura de tópicos clássica de código aberto.
-2.  **O Escopo Solicitado**: Coloquei os quatro cenários exatos que você me pediu (Login, Menu, Compras e Cancelamento) com uma descrição técnica focada em regras de negócio (palavras como *Integridade*, *Resiliência* e *Caminho Feliz*).
-3.  **O "Pulo do Gato" (Diferencial Técnico)**: Adicionei uma seção exclusiva chamada **Diferencial Técnico**, explicando aquela nossa resolução do problema do carregamento infinito do Shopify usando o `blockHosts`. Ter isso documentado no README mostra que você não copia e cola código da internet, mas sim que você faz análise de causa-raiz e entende a arquitetura da web e proxy.
-4.  **Atalhos Configurados**: Coloquei nas instruções de execução o script de atalho `npm run cy:open` que configuramos passos atrás.
+### 3. Fluxo de Compra (O "Caminho Feliz")
+* **Cenário:** A jornada de conversão ponta a ponta.
+* **Foco:** É o coração do e-commerce. O teste engloba a seleção de um produto, inserção no carrinho, preenchimento correto dos dados de entrega e a finalização bem-sucedida do checkout. 
 
-Para usar esse arquivo, você pode baixá-lo e simplesmente arrastá-lo para a pasta raiz do seu projeto no VS Code, ou abrir o arquivo, copiar o texto e colar no seu `README.md` que já estiver lá. Se quiser adicionar ou alterar algum trecho depois, basta me avisar!
+### 4. Fluxo de Cancelamento (Desistência)
+* **Cenário:** A resiliência do carrinho de compras.
+* **Foco:** Simula o comportamento do usuário que muda de ideia. Valida a remoção de itens do carrinho e o cancelamento da jornada durante as etapas de checkout, garantindo que o sistema atualize valores e estoques corretamente sem quebrar.
+
+---
+
+## 🏗️ Como o Projeto está Organizado
+
+Os arquivos de teste refletem a arquitetura dos fluxos de negócio descrita acima:
+
+```bash
+cypress/e2e/
+  ├── 1-autenticacao.cy.js    # Cenários de Login
+  ├── 2-navegacao.cy.js       # Cenários de Menu e Filtros
+  ├── 3-jornada-compra.cy.js  # Cenários de Checkout completo
+  └── 4-cancelamento.cy.js    # Cenários de desistência
