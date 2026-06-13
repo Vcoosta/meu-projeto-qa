@@ -1,4 +1,12 @@
 {
+  "name": "seu-portfolio-qa",
+  "version": "1.0.0",
+  "description": "Meu portfólio de automação de testes",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "cy:open": "npx cypress open"
+  },
   "devDependencies": {
     "cypress": "^15.17.0"
   }
