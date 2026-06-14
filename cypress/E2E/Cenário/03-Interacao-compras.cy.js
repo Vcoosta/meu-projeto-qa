@@ -19,32 +19,14 @@ describe('Cenários de Interação com Compras', () => {
         cy.adicionarProdutoEIrParaCheckout();
     })
 
-    it.only('Efetuar interação com o carrinho de compras - Informações de pagamento', () => {
-        cy.intercept('GET', '**/shipping_rates*').as('getShippingRates');
-
-        const enderecoDinamico = faker.location.streetAddress(); // Ex: 123 Main St
-        const complementoDinamico = faker.location.secondaryAddress(); // Ex: Apt 4B
-        const cidadeDinamica = faker.location.city();            // Ex: Springfield
-        const cepDinamico = faker.location.zipCode();            // Ex: 12345-678
-        const telefoneDinamico = faker.phone.number();           // Ex: 555-1234
-
-
+     it.only('Efetuar interação com o carrinho de compras - Check Out - Desistência', () => {
         cy.adicionarProdutoEIrParaCheckout();
-        cy.get('[name="email"]').click();
-        cy.get('[name="email"]').type('teste@gmail.com');
-        cy.get('[name="countryCode"]').select('BR').trigger('change', { force: true });
-        cy.get('#TextFieldP0-38').click().type('Vitor');
-        cy.get('#TextFieldP0-39').click().type('Costa');
-        // preencher os campos de endereço usando dados dinâmicos do Faker
-        cy.get('#TextFieldP0-41').click().type('QA Automation');
-        cy.get('#TextFieldP0-44').click().type(enderecoDinamico);
-        cy.get('#TextFieldP0-46').click().type(complementoDinamico);
-        cy.get('#TextFieldP0-48').click().type(cidadeDinamica);
-        cy.get('#TextFieldP0-51').click().type(telefoneDinamico);
-        cy.get('[name="save_shipping_information"]').check();
-        cy.get('#FormP0-15 p._1fragemtb').click();
-        cy.get('#TextFieldP0-49').click().type(cepDinamico).blur();
-        
+        cy.get('#cart a[href="/cart/change?line=1&quantity=0"]').click();
+        cy.get('#cart p').should('have.text', 'It appears that your cart is currently empty! Continue Shopping.');
+        cy.get('#page-content h1').should('have.text', 'My Cart');
+    })
 
+    it('Efetuar interação com o carrinho de compras - Informações de pagamento', () => {
+        cy.preencherInformacoesDePagamento();
     })
 })
