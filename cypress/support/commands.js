@@ -65,8 +65,6 @@ Cypress.Commands.add('adicionarProdutoEIrParaCheckout', (tamanho = 'L', cor = 'R
 // Criando o comando personalizado para preencher as informações de pagamento
 
 Cypress.Commands.add('preencherInformacoesDePagamento', () => {
-    // Interceptação de rede
-    cy.intercept('GET', '**/shipping_rates*').as('getShippingRates');
 
     // Geração de massa de dados dinâmica
     const enderecoDinamico = faker.location.streetAddress();
