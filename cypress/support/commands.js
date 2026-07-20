@@ -94,3 +94,13 @@ Cypress.Commands.add('preencherInformacoesDePagamento', () => {
     cy.get('#FormP0-15 p._1fragemtb').click();
     cy.get('#TextFieldP0-49').click().type(cepDinamico).blur();
 });
+
+// Comando personalizado para salvar o HTML da página atual e ajudar na identificação de seletores
+Cypress.Commands.add('saveHtml', (fileName = 'dump') => {
+    cy.document().then((doc) => {
+        const html = doc.documentElement.outerHTML;
+        const path = `cypress/fixtures/html-dumps/${fileName}.html`;
+        cy.writeFile(path, html);
+        cy.log(`HTML dump salvo em: ${path}`);
+    });
+});

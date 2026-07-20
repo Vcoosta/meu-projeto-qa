@@ -1,9 +1,10 @@
-describe('Efetuar "Login" com Sucesso', () => {
+describe('Efetuar interação com todos os menuss', () => {
     beforeEach(() => {
         cy.visit('/')
+        cy.saveHtml('pagina-inicial')
     })
 
-    it('Efetuar "Login" com Sucesso na Plataforma', () => {
+    it('Efetuar interação com todos os menus', () => {
         //Validando o conteúdo da página inicial
         cy.get('#main-menu a[href="/"]').should('have.text', 'Home');
         cy.get('#main-menu a[href="/"]').should('be.visible');

@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cypress Selector Helper & Visualizer</title>
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --accent-color: #6366f1;
+            --accent-hover: #4f46e5;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+            --transition-speed: 0.2s;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f5f9;
+            --accent-color: #4f46e5;
+            --accent-hover: #4338ca;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color var(--transition-speed), color var(--transition-speed);
+        }
+
+        header {
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            background: linear-gradient(135deg, var(--accent-color), #ec4899);
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4);
+        }
+
+        .logo-title h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+        }
+
+        .logo-title p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .theme-toggle, .btn-secondary {
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all var(--transition-speed);
+        }
+
+        .theme-toggle:hover, .btn-secondary:hover {
+            background-color: var(--border-color);
+            border-color: var(--text-muted);
+        }
+
+        .container {
+            max-width: 1600px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1.5rem;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 1.5rem;
+            flex-grow: 1;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            box-shadow: var(--card-shadow);
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-main);
+        }
+
+        /* Drag & Drop Area */
+        .dropzone {
+            border: 2px dashed var(--border-color);
+            border-radius: 0.5rem;
+            padding: 2rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            background-color: var(--bg-primary);
+        }
+
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--accent-color);
+            background-color: rgba(99, 102, 241, 0.05);
+        }
+
+        .dropzone-icon {
+            width: 3rem;
+            height: 3rem;
+            margin: 0 auto 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .dropzone.dragover .dropzone-icon {
+            color: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        .dropzone p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .dropzone span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            opacity: 0.8;
+        }
+
+        .textarea-input {
+            width: 100%;
+            height: 120px;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            color: var(--text-main);
+            padding: 0.75rem;
+            font-family: monospace;
+            font-size: 0.8rem;
+            resize: vertical;
+            margin-bottom: 0.75rem;
+            outline: none;
+            transition: border-color var(--transition-speed);
+        }
+
+        .textarea-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.625rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 500;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: background-color var(--transition-speed);
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        /* Filter Options */
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            margin-bottom: 0.75rem;
+        }
+
+        .search-input {
+            width: 100%;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            color: var(--text-main);
+            padding: 0.625rem 0.75rem 0.625rem 2.25rem;
+            font-family: inherit;
+            font-size: 0.875rem;
+            outline: none;
+            transition: border-color var(--transition-speed);
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1rem;
+            height: 1rem;
+            color: var(--text-muted);
+        }
+
+        .filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.375rem;
+        }
+
+        .filter-tag {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 0.375rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .filter-tag:hover {
+            border-color: var(--text-muted);
+            color: var(--text-main);
+        }
+
+        .filter-tag.active {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+
+        .filter-tag span {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 0.05rem 0.35rem;
+            border-radius: 1rem;
+            font-size: 0.65rem;
+        }
+
+        /* Stats Section */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .stat-item {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .stat-lbl {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Main Content Styling */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .results-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .results-count {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 5rem 2rem;
+            text-align: center;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            box-shadow: var(--card-shadow);
+        }
+
+        .empty-icon {
+            width: 4rem;
+            height: 4rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            max-width: 400px;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Element Card Styling */
+        .element-card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 0.875rem;
+            animation: slideUp 0.3s ease-out;
+            transition: border-color var(--transition-speed), box-shadow var(--transition-speed);
+        }
+
+        .element-card:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .element-meta {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .badge-tag {
+            background-color: rgba(99, 102, 241, 0.15);
+            color: var(--accent-color);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .badge-warning {
+            background-color: rgba(245, 158, 11, 0.15);
+            color: var(--warning-color);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .badge-stable {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-type {
+            background-color: var(--bg-tertiary);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+
+        .element-preview-box {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            font-family: monospace;
+            font-size: 0.8rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: #ec4899; /* Pink accent for HTML tags */
+        }
+
+        .element-preview-box .attr-name {
+            color: #38bdf8; /* Blue for attributes */
+        }
+
+        .element-preview-box .attr-val {
+            color: #a7f3d0; /* Greenish for values */
+        }
+
+        .element-preview-box .tag-name {
+            color: #f43f5e; /* Red/pink for tag names */
+        }
+
+        .element-preview-box .tag-text {
+            color: var(--text-main); /* White for node texts */
+        }
+
+        /* Selector suggestion rows */
+        .selector-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .selector-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .selector-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            gap: 1rem;
+        }
+
+        .selector-row.priority-best {
+            border-left: 3px solid var(--success-color);
+        }
+
+        .selector-row.priority-good {
+            border-left: 3px solid var(--accent-color);
+        }
+
+        .selector-row.priority-weak {
+            border-left: 3px solid var(--warning-color);
+        }
+
+        .selector-code {
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--text-main);
+            overflow-x: auto;
+            white-space: nowrap;
+            flex-grow: 1;
+        }
+
+        .selector-row-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .priority-label {
+            font-size: 0.65rem;
+            font-weight: 500;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+        }
+
+        .priority-lbl-best {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+        }
+
+        .priority-lbl-good {
+            background-color: rgba(99, 102, 241, 0.1);
+            color: var(--accent-color);
+        }
+
+        .priority-lbl-weak {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .btn-copy {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-speed);
+        }
+
+        .btn-copy:hover {
+            color: var(--accent-color);
+            background-color: var(--bg-tertiary);
+        }
+
+        .btn-copy.copied {
+            color: var(--success-color);
+        }
+
+        .copy-tooltip {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: var(--success-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            font-weight: 500;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1000;
+        }
+
+        .copy-tooltip.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        footer {
+            background-color: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 1.5rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: auto;
+        }
+
+        /* Toggle switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--bg-tertiary);
+            transition: .3s;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--text-main);
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <div class="logo-icon">Cy</div>
+            <div class="logo-title">
+                <h1>Cypress Selector Helper</h1>
+                <p>Identificador visual de seletores E2E</p>
+            </div>
+        </div>
+        <div class="header-controls">
+            <button class="btn-secondary" id="load-sample-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Carregar Exemplo
+            </button>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 0.8rem; color: var(--text-muted)">Modo Claro</span>
+                <label class="switch">
+                    <input type="checkbox" id="theme-toggle-cb">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <!-- Sidebar -->
+        <div class="sidebar">
+            
+            <!-- Upload Card -->
+            <div class="card">
+                <div class="card-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    Carregar HTML Dump
+                </div>
+                
+                <div class="dropzone" id="drop-zone">
+                    <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M12 18v-6"></path><path d="m9 15 3 3 3-3"></path></svg>
+                    <p>Arraste o dump .html aqui</p>
+                    <span>ou clique para selecionar</span>
+                    <input type="file" id="file-input" accept=".html" style="display: none;">
+                </div>
+                
+                <div style="margin: 1rem 0; text-align: center; color: var(--text-muted); font-size: 0.75rem; font-weight: 500; text-transform: uppercase;">
+                    ou
+                </div>
+                
+                <textarea class="textarea-input" id="raw-html-input" placeholder="Cole o código HTML copiado da página aqui..."></textarea>
+                <button class="btn-primary" id="btn-parse-text">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    Analisar HTML Colado
+                </button>
+            </div>
+
+            <!-- Stats Card -->
+            <div class="card" style="display: none;" id="stats-card">
+                <div class="card-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    Métricas de Seletores
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-val" id="stat-total">0</div>
+                        <div class="stat-lbl">Identificados</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-val" id="stat-stable">0</div>
+                        <div class="stat-lbl">Estáveis</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-val" id="stat-warnings">0</div>
+                        <div class="stat-lbl">Sem IDs/Data</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-val" id="stat-interactive">0</div>
+                        <div class="stat-lbl">Interativos</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters Card -->
+            <div class="card" style="display: none;" id="filters-card">
+                <div class="card-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                    Filtros & Busca
+                </div>
+                <div class="filter-group">
+                    <div class="search-input-wrapper">
+                        <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" class="search-input" id="search-box" placeholder="Buscar por tag, ID, classe, texto...">
+                    </div>
+                    <div class="filter-tags" id="tag-filters">
+                        <button class="filter-tag active" data-filter="all">Todos <span id="count-all">0</span></button>
+                        <button class="filter-tag" data-filter="button">Botões <span id="count-button">0</span></button>
+                        <button class="filter-tag" data-filter="input">Inputs <span id="count-input">0</span></button>
+                        <button class="filter-tag" data-filter="select">Selects <span id="count-select">0</span></button>
+                        <button class="filter-tag" data-filter="link">Links <span id="count-link">0</span></button>
+                        <button class="filter-tag" data-filter="id">Com ID <span id="count-id">0</span></button>
+                        <button class="filter-tag" data-filter="datacy">Com data-* <span id="count-datacy">0</span></button>
+                        <button class="filter-tag" data-filter="unstable">⚠️ Instáveis <span id="count-unstable">0</span></button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            
+            <div class="results-header" style="display: none;" id="results-header">
+                <div class="results-title" id="results-title-text">Elementos Encontrados</div>
+                <div class="results-count" id="results-count-text">Mostrando 0 de 0 elementos</div>
+            </div>
+
+            <div id="elements-list-container">
+                <!-- Empty state initially -->
+                <div class="empty-state" id="empty-state">
+                    <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg>
+                    <h3>Nenhum HTML Carregado</h3>
+                    <p>Arraste um dump HTML criado pelo comando customizado do Cypress ou copie o HTML inspecionado da página e cole na caixa de texto ao lado.</p>
+                    <button class="btn-primary" style="width: auto;" id="btn-use-sample-empty">
+                        Experimentar com Código de Exemplo
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Toast copy notification -->
+    <div class="copy-tooltip" id="toast-tooltip">
+        Seletor copiado para a área de transferência!
+    </div>
+
+    <footer>
+        <p>Cypress Selector Helper — Desenvolvido para facilitar a automação de testes E2E.</p>
+    </footer>
+
+    <script>
+        // State variables
+        let parsedElements = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
+
+        // DOM elements
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const rawHtmlInput = document.getElementById('raw-html-input');
+        const btnParseText = document.getElementById('btn-parse-text');
+        const elementsListContainer = document.getElementById('elements-list-container');
+        const emptyState = document.getElementById('empty-state');
+        const resultsHeader = document.getElementById('results-header');
+        const resultsCountText = document.getElementById('results-count-text');
+        
+        // Cards/panels that toggle visibility
+        const statsCard = document.getElementById('stats-card');
+        const filtersCard = document.getElementById('filters-card');
+        
+        // Stats counters
+        const statTotal = document.getElementById('stat-total');
+        const statStable = document.getElementById('stat-stable');
+        const statWarnings = document.getElementById('stat-warnings');
+        const statInteractive = document.getElementById('stat-interactive');
+
+        // Theme Toggle
+        const themeToggleCb = document.getElementById('theme-toggle-cb');
+        themeToggleCb.addEventListener('change', () => {
+            if (themeToggleCb.checked) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+        });
+
+        // Setup drag & drop
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.html')) {
+                readHtmlFile(file);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                readHtmlFile(file);
+            }
+        });
+
+        btnParseText.addEventListener('click', () => {
+            const htmlText = rawHtmlInput.value.trim();
+            if (htmlText) {
+                parseAndDisplayHtml(htmlText);
+            }
+        });
+
+        // Trigger samples
+        document.getElementById('load-sample-btn').addEventListener('click', loadSample);
+        document.getElementById('btn-use-sample-empty').addEventListener('click', loadSample);
+
+        // Search logic
+        const searchBox = document.getElementById('search-box');
+        searchBox.addEventListener('input', () => {
+            searchQuery = searchBox.value.toLowerCase().trim();
+            filterAndRenderElements();
+        });
+
+        // Filter tag handlers
+        const filterTags = document.querySelectorAll('.filter-tag');
+        filterTags.forEach(tag => {
+            tag.addEventListener('click', () => {
+                filterTags.forEach(t => t.classList.remove('active'));
+                tag.classList.add('active');
+                currentFilter = tag.dataset.filter;
+                filterAndRenderElements();
+            });
+        });
+
+        function readHtmlFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                parseAndDisplayHtml(e.target.result);
+            };
+            reader.readAsText(file);
+        }
+
+        function loadSample() {
+            const sampleHtml = `
+<div class="shopify-section">
+    <div class="container">
+        <h1>Minha Loja de Testes</h1>
+        <form id="login-form" action="/login" method="POST">
+            <div class="form-group">
+                <label for="customer-email">E-mail</label>
+                <input type="email" id="customer-email" name="email" class="form-control" placeholder="usuario@email.com" required>
+            </div>
+            <div class="form-group">
+                <label for="customer-password">Senha</label>
+                <input type="password" id="customer-password" name="password" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <input type="checkbox" id="remember-me" name="remember">
+                <label for="remember-me">Lembrar de mim</label>
+            </div>
+            <button type="submit" data-cy="btn-login-submit" class="btn btn-primary btn-block">
+                Entrar na Conta
+            </button>
+        </form>
+        <div class="extra-actions">
+            <a href="/recover" id="forgot-password" class="link-muted">Esqueci minha senha</a>
+            <a href="/register" class="btn btn-link">Criar conta rápida</a>
+            <button type="button" class="btn-quick-view">Visualização rápida</button>
+        </div>
+    </div>
+</div>
+            `.trim();
+            rawHtmlInput.value = sampleHtml;
+            parseAndDisplayHtml(sampleHtml);
+        }
+
+        function parseAndDisplayHtml(htmlContent) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlContent, 'text/html');
+            
+            // Extract elements of interest
+            // Form controls, links, custom attributes, elements with ids, buttons
+            const query = 'button, input, select, textarea, a, form, [data-cy], [data-test], [data-testid], [data-qa], [id]';
+            const rawElements = doc.querySelectorAll(query);
+            
+            parsedElements = [];
+
+            rawElements.forEach((el, index) => {
+                // Avoid capturing layouts containers unless they have id/data-test
+                const isInteractive = ['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA', 'A'].includes(el.tagName);
+                const hasId = el.hasAttribute('id');
+                const hasDataTest = el.hasAttribute('data-cy') || el.hasAttribute('data-test') || el.hasAttribute('data-testid') || el.hasAttribute('data-qa');
+                const hasName = el.hasAttribute('name');
+                
+                // If it's a structural tag without attributes of interest, ignore
+                if (!isInteractive && !hasId && !hasDataTest) {
+                    return;
+                }
+
+                // Skip utility inline icons or labels unless they have ID
+                if (el.tagName === 'A' && el.innerHTML.trim() === '' && !hasId && !hasDataTest) {
+                    return;
+                }
+
+                // Attributes
+                const id = el.getAttribute('id') || '';
+                const name = el.getAttribute('name') || '';
+                const classes = Array.from(el.classList).join('.');
+                const text = el.textContent.replace(/\s+/g, ' ').trim();
+                const placeholder = el.getAttribute('placeholder') || '';
+                const type = el.getAttribute('type') || '';
+                const val = el.getAttribute('value') || '';
+
+                // Extract data attributes
+                let dataAttr = '';
+                let dataVal = '';
+                const dataCandidates = ['data-cy', 'data-test', 'data-testid', 'data-qa'];
+                for (const candidate of dataCandidates) {
+                    if (el.hasAttribute(candidate)) {
+                        dataAttr = candidate;
+                        dataVal = el.getAttribute(candidate);
+                        break;
+                    }
+                }
+
+                // Determine stability
+                const isStable = hasDataTest || hasId || (isInteractive && hasName);
+
+                // Build HTML snippet for preview
+                let preview = `<span class="tag-name">&lt;${el.tagName.toLowerCase()}</span>`;
+                if (dataAttr) preview += ` <span class="attr-name">${dataAttr}</span>=<span class="attr-val">"${dataVal}"</span>`;
+                if (id) preview += ` <span class="attr-name">id</span>=<span class="attr-val">"${id}"</span>`;
+                if (name) preview += ` <span class="attr-name">name</span>=<span class="attr-val">"${name}"</span>`;
+                if (type) preview += ` <span class="attr-name">type</span>=<span class="attr-val">"${type}"</span>`;
+                if (el.classList.length > 0) {
+                    preview += ` <span class="attr-name">class</span>=<span class="attr-val">"${Array.from(el.classList).join(' ')}"</span>`;
+                }
+                
+                const selfClosing = ['input', 'img', 'br', 'hr'].includes(el.tagName.toLowerCase());
+                if (selfClosing) {
+                    preview += `<span class="tag-name">/&gt;</span>`;
+                } else {
+                    preview += `<span class="tag-name">&gt;</span>`;
+                    if (text) {
+                        const displayText = text.length > 50 ? text.substring(0, 47) + '...' : text;
+                        preview += `<span class="tag-text">${displayText}</span>`;
+                    }
+                    preview += `<span class="tag-name">&lt;/${el.tagName.toLowerCase()}&gt;</span>`;
+                }
+
+                // Generate ranked selectors
+                const selectors = [];
+                
+                // 1. Data cy (Best)
+                if (dataAttr) {
+                    selectors.push({
+                        code: `cy.get('[${dataAttr}="${dataVal}"]')`,
+                        priority: 'best',
+                        label: 'Recomendado (data-* attribute)'
+                    });
+                }
+                
+                // 2. ID (Excellent)
+                if (id) {
+                    // Check if ID looks dynamic (e.g. TextFieldP0-38)
+                    const isDynamicId = /-[0-9]+/.test(id) || /^[0-9]/.test(id);
+                    selectors.push({
+                        code: `cy.get('#${id}')`,
+                        priority: isDynamicId ? 'weak' : 'good',
+                        label: isDynamicId ? 'ID Dinâmico (Cuidado)' : 'ID Estável'
+                    });
+                }
+
+                // 3. Name Attribute (Good)
+                if (name) {
+                    selectors.push({
+                        code: `cy.get('[name="${name}"]')`,
+                        priority: 'good',
+                        label: 'Atributo name'
+                    });
+                }
+
+                // 4. Text Content (Great for buttons / links)
+                if (text && text.length < 40 && ['BUTTON', 'A'].includes(el.tagName)) {
+                    selectors.push({
+                        code: `cy.contains('${text}')`,
+                        priority: 'good',
+                        label: 'Contém Texto (cy.contains)'
+                    });
+                }
+
+                // 5. Classes (Fallback)
+                if (classes) {
+                    const selectorClass = classes.split('.').filter(c => c && !c.includes('active') && !c.includes('focus')).join('.');
+                    if (selectorClass) {
+                        selectors.push({
+                            code: `cy.get('.${selectorClass}')`,
+                            priority: 'weak',
+                            label: 'Classes CSS'
+                        });
+                    }
+                }
+
+                // 6. Type based or tags fallback
+                if (el.tagName === 'INPUT' && type && type !== 'text') {
+                    selectors.push({
+                        code: `cy.get('input[type="${type}"]')`,
+                        priority: 'weak',
+                        label: 'Tipo de Input'
+                    });
+                } else {
+                    selectors.push({
+                        code: `cy.get('${el.tagName.toLowerCase()}')`,
+                        priority: 'weak',
+                        label: 'Nome da Tag'
+                    });
+                }
+
+                parsedElements.push({
+                    id: index,
+                    tagName: el.tagName.toLowerCase(),
+                    type: type,
+                    hasId: !!id,
+                    hasDataTest: !!dataAttr,
+                    isStable: isStable,
+                    isInteractive: isInteractive,
+                    text: text,
+                    placeholder: placeholder,
+                    preview: preview,
+                    selectors: selectors,
+                    rawText: text.toLowerCase(),
+                    rawAttrs: `${id} ${name} ${classes} ${placeholder} ${type} ${dataVal}`.toLowerCase()
+                });
+            });
+
+            // Update panels visibility
+            emptyState.style.display = 'none';
+            resultsHeader.style.display = 'flex';
+            statsCard.style.display = 'block';
+            filtersCard.style.display = 'block';
+
+            // Calculate and render stats & tags
+            calculateStats();
+            filterAndRenderElements();
+        }
+
+        function calculateStats() {
+            statTotal.innerText = parsedElements.length;
+            statStable.innerText = parsedElements.filter(e => e.isStable).length;
+            statWarnings.innerText = parsedElements.filter(e => !e.isStable).length;
+            statInteractive.innerText = parsedElements.filter(e => e.isInteractive).length;
+
+            // Counts for filter buttons
+            document.getElementById('count-all').innerText = parsedElements.length;
+            document.getElementById('count-button').innerText = parsedElements.filter(e => e.tagName === 'button' || (e.tagName === 'input' && ['submit', 'button'].includes(e.type))).length;
+            document.getElementById('count-input').innerText = parsedElements.filter(e => e.tagName === 'input' && !['submit', 'button'].includes(e.type)).length;
+            document.getElementById('count-select').innerText = parsedElements.filter(e => e.tagName === 'select' || e.tagName === 'textarea').length;
+            document.getElementById('count-link').innerText = parsedElements.filter(e => e.tagName === 'a').length;
+            document.getElementById('count-id').innerText = parsedElements.filter(e => e.hasId).length;
+            document.getElementById('count-datacy').innerText = parsedElements.filter(e => e.hasDataTest).length;
+            document.getElementById('count-unstable').innerText = parsedElements.filter(e => !e.isStable).length;
+        }
+
+        function filterAndRenderElements() {
+            let filtered = parsedElements;
+
+            // Apply tag filter
+            if (currentFilter !== 'all') {
+                if (currentFilter === 'button') {
+                    filtered = filtered.filter(e => e.tagName === 'button' || (e.tagName === 'input' && ['submit', 'button'].includes(e.type)));
+                } else if (currentFilter === 'input') {
+                    filtered = filtered.filter(e => e.tagName === 'input' && !['submit', 'button'].includes(e.type));
+                } else if (currentFilter === 'select') {
+                    filtered = filtered.filter(e => e.tagName === 'select' || e.tagName === 'textarea');
+                } else if (currentFilter === 'link') {
+                    filtered = filtered.filter(e => e.tagName === 'a');
+                } else if (currentFilter === 'id') {
+                    filtered = filtered.filter(e => e.hasId);
+                } else if (currentFilter === 'datacy') {
+                    filtered = filtered.filter(e => e.hasDataTest);
+                } else if (currentFilter === 'unstable') {
+                    filtered = filtered.filter(e => !e.isStable);
+                }
+            }
+
+            // Apply search query
+            if (searchQuery) {
+                filtered = filtered.filter(e => {
+                    return e.tagName.includes(searchQuery) ||
+                           e.rawText.includes(searchQuery) ||
+                           e.rawAttrs.includes(searchQuery);
+                });
+            }
+
+            resultsCountText.innerText = `Mostrando ${filtered.length} de ${parsedElements.length} elementos`;
+
+            renderList(filtered);
+        }
+
+        function renderList(elements) {
+            elementsListContainer.innerHTML = '';
+            
+            if (elements.length === 0) {
+                elementsListContainer.innerHTML = `
+                    <div class="empty-state">
+                        <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <h3>Nenhum elemento corresponde ao filtro</h3>
+                        <p>Tente alterar sua busca ou desativar o filtro atual.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            elements.forEach(el => {
+                const card = document.createElement('div');
+                card.className = 'element-card';
+                
+                // Badges
+                let badgesHtml = `<span class="badge badge-tag">${el.tagName}</span>`;
+                if (el.type) badgesHtml += `<span class="badge badge-type">${el.type}</span>`;
+                
+                if (el.isStable) {
+                    badgesHtml += `<span class="badge badge-stable">Estável</span>`;
+                } else {
+                    badgesHtml += `<span class="badge badge-warning">⚠️ Sem data-cy ou id</span>`;
+                }
+
+                // Generate selectors HTML
+                let selectorsHtml = '';
+                el.selectors.forEach(sel => {
+                    const priorityClass = sel.priority === 'best' ? 'priority-best' : (sel.priority === 'good' ? 'priority-good' : 'priority-weak');
+                    const priorityLbl = sel.priority === 'best' ? 'priority-lbl-best' : (sel.priority === 'good' ? 'priority-lbl-good' : 'priority-lbl-weak');
+                    
+                    selectorsHtml += `
+                        <div class="selector-row ${priorityClass}">
+                            <div class="selector-code">${escapeHtml(sel.code)}</div>
+                            <div class="selector-row-meta">
+                                <span class="priority-label ${priorityLbl}">${sel.label}</span>
+                                <button class="btn-copy" onclick="copyText(this, '${escapeJS(sel.code)}')" title="Copiar seletor Cypress">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="element-meta">
+                        ${badgesHtml}
+                    </div>
+                    <div class="element-preview-box">${el.preview}</div>
+                    <div class="selector-section">
+                        <div class="selector-title">Seletores Sugeridos (Cypress)</div>
+                        ${selectorsHtml}
+                    </div>
+                `;
+                
+                elementsListContainer.appendChild(card);
+            });
+        }
+
+        // Utilities
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        function escapeJS(text) {
+            return text.replace(/'/g, "\\'").replace(/"/g, '\\"');
+        }
+
+        function copyText(button, text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Success visual cue
+                button.classList.add('copied');
+                const origIcon = button.innerHTML;
+                button.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--success-color)"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                
+                const tooltip = document.getElementById('toast-tooltip');
+                tooltip.classList.add('show');
+                
+                setTimeout(() => {
+                    button.classList.remove('copied');
+                    button.innerHTML = origIcon;
+                    tooltip.classList.remove('show');
+                }, 2000);
+            }).catch(err => {
+                console.error('Erro ao copiar texto: ', err);
+            });
+        }
+    </script>
+</body>
+</html>
